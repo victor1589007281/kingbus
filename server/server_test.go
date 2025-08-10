@@ -40,7 +40,7 @@ import (
 	"github.com/flike/kingbus/log"
 	"github.com/flike/kingbus/storage"
 	"github.com/flike/kingbus/utils"
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 const letterArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -198,7 +198,7 @@ func StartKingbusServerNodeInTest(id int) *KingbusServer {
 func saveMasterInfoForTest(store storage.Storage, id int) error {
 	masterInfo := mysql.MasterInfo{
 		ServerID:   int32(id),
-		ServerUUID: uuid.NewV4().String(),
+		ServerUUID: uuid.New().String(),
 		Version:    "5.7.23-log",
 	}
 

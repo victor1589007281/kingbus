@@ -413,7 +413,7 @@ func (s *MetaStore) UpdatePugedGtidset(firstIndex uint64) error {
 		return err
 	}
 	if gtids == nil || len(gtids.String()) == 0 {
-		log.Log.Warningf("UpdatePugedGtidset:gtids is nil,raftIndex:%d", firstIndex)
+		log.Log.Warnf("UpdatePugedGtidset:gtids is nil,raftIndex:%d", firstIndex)
 		return nil
 	}
 

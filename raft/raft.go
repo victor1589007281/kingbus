@@ -165,7 +165,7 @@ func MustGetAppliedIndex(s storage.Storage) uint64 {
 		log.Log.Fatalf("MustGetAppliedIndex:Get error,err:%s,key:%s", err.Error(), storage.AppliedIndexKey)
 	}
 	if len(value) == 0 {
-		log.Log.Warningf("key:%s not exist,return 0", storage.AppliedIndexKey)
+		log.Log.Warnf("key:%s not exist,return 0", storage.AppliedIndexKey)
 		return 0
 	}
 

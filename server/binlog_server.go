@@ -30,7 +30,7 @@ import (
 	"github.com/flike/kingbus/mysql"
 	"github.com/flike/kingbus/storage"
 	"github.com/flike/kingbus/utils"
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	gomysql "github.com/siddontang/go-mysql/mysql"
 	"github.com/siddontang/go-mysql/replication"
 	"go.uber.org/atomic"

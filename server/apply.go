@@ -24,7 +24,7 @@ import (
 	"path"
 
 	"github.com/flike/kingbus/storage/storagepb"
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/google/uuid"
 
 	"github.com/flike/kingbus/config"
 	"github.com/flike/kingbus/utils"
