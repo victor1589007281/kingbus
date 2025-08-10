@@ -28,9 +28,9 @@ import (
 	"github.com/flike/kingbus/log"
 	"github.com/flike/kingbus/mysql"
 	"github.com/flike/kingbus/storage"
-	"github.com/siddontang/go-mysql/client"
-	gomysql "github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
+	"github.com/go-mysql-org/go-mysql/client"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
 )
 
 //Syncer is a mock mysql slave, and receive binlog from master

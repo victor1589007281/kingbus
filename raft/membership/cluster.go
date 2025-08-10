@@ -25,7 +25,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sort"
 	"strings"
@@ -464,7 +464,7 @@ func getClusterFromRemotePeers(urls []string, timeout time.Duration, logerr bool
 			}
 			continue
 		}
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
 			if logerr {

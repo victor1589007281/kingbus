@@ -16,8 +16,8 @@ import (
 	"github.com/flike/kingbus/storage/storagepb"
 	"github.com/flike/kingbus/utils"
 	"github.com/google/uuid"
-	gomysql "github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
 	"github.com/stretchr/testify/require"
 )
 

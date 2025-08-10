@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -55,7 +55,7 @@ func StartBsInHandlerForTest(t *testing.T) {
 	require.Nil(t, err)
 	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	require.Nil(t, err)
 
 	d := json.NewDecoder(bytes.NewReader(respBody))
@@ -70,7 +70,7 @@ func StartBsInHandlerForTest(t *testing.T) {
 	require.Nil(t, err)
 
 	defer resp.Body.Close()
-	respBody, err = ioutil.ReadAll(resp.Body)
+	respBody, err = io.ReadAll(resp.Body)
 	require.Nil(t, err)
 
 	d = json.NewDecoder(bytes.NewReader(respBody))
@@ -94,7 +94,7 @@ func TestBinlogServerHandler_GetBinlogServerStatus(t *testing.T) {
 	require.Nil(t, err)
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	require.Nil(t, err)
 
 	d := json.NewDecoder(bytes.NewReader(body))
@@ -127,7 +127,7 @@ func TestGetMembers(t *testing.T) {
 	require.Nil(t, err)
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	require.Nil(t, err)
 
 	d := json.NewDecoder(bytes.NewReader(body))
@@ -168,7 +168,7 @@ func TestUpdateMember(t *testing.T) {
 	resp, err := client.Do(req)
 	require.Nil(t, err)
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	require.Nil(t, err)
 
 	d := json.NewDecoder(bytes.NewReader(respBody))
@@ -220,7 +220,7 @@ func TestDeleteMember(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	require.Nil(t, err)
 
 	d := json.NewDecoder(bytes.NewReader(respBody))
@@ -269,7 +269,7 @@ func TestAddMember(t *testing.T) {
 	require.Nil(t, err)
 	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	require.Nil(t, err)
 
 	d := json.NewDecoder(bytes.NewReader(respBody))

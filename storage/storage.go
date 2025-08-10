@@ -16,7 +16,7 @@ package storage
 
 import (
 	"github.com/coreos/etcd/raft/raftpb"
-	gomysql "github.com/siddontang/go-mysql/mysql"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
 )
 
 const (

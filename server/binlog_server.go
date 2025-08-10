@@ -31,8 +31,8 @@ import (
 	"github.com/flike/kingbus/storage"
 	"github.com/flike/kingbus/utils"
 	"github.com/google/uuid"
-	gomysql "github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
 	"go.uber.org/atomic"
 )
 
@@ -151,7 +151,7 @@ func (s *BinlogServer) RegisterSlave(slave *mysql.Slave) error {
 	}
 
 	if _, ok := s.slaves[slave.UUID]; ok {
-		log.Log.Warningf("register the same slave into binlog server again")
+		log.Log.Warnf("register the same slave into binlog server again")
 	}
 	s.slaves[slave.UUID] = slave
 	return nil

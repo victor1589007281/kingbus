@@ -20,7 +20,7 @@ package raft
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	stdlog "log"
 	"net"
 	"net/http"
@@ -49,7 +49,7 @@ func (r *Node) SetPeerHandler() {
 		srv := &http.Server{
 			Handler:     mux,
 			ReadTimeout: 5 * time.Minute,
-			ErrorLog:    stdlog.New(ioutil.Discard, "", 0),
+			ErrorLog:    stdlog.New(io.Discard, "", 0),
 		}
 		r.PeerListener[i].serve = func() error {
 			return srv.Serve(r.PeerListener[i].Listener)

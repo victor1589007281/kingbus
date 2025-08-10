@@ -4,6 +4,8 @@
 syntax = "proto2";
 package storagepb;
 
+option go_package = "github.com/flike/kingbus/storage/storagepb";
+
 import "gogoproto/gogo.proto";
 
 option (gogoproto.marshaler_all) = true;

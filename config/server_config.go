@@ -25,7 +25,7 @@ import (
 	"github.com/coreos/etcd/pkg/types"
 	"github.com/flike/kingbus/mysql"
 	"github.com/flike/kingbus/utils"
-	"github.com/siddontang/go-mysql/replication"
+	"github.com/go-mysql-org/go-mysql/replication"
 )
 
 const (
@@ -130,7 +130,6 @@ func NewSyncerConfig(args *SyncerArgs) (*SyncerConfig, error) {
 		// ServerID is the unique id in cluster.
 		ServerID: uint32(args.SyncerID),
 
-		ServerUuid: args.SynerUUID,
 		// Flavor is "mysql" or "mariadb", if not set, use "mysql" default.
 		Flavor: "mysql",
 

@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/flike/kingbus/utils"
-	gomysql "github.com/siddontang/go-mysql/mysql"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/stretchr/testify/assert"
 )
 

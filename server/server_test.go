@@ -16,7 +16,7 @@ package server
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"testing"
@@ -64,7 +64,7 @@ func TestSyncAdminURL(t *testing.T) {
 	require.Nil(t, err)
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	require.Nil(t, err)
 
 	d := json.NewDecoder(bytes.NewReader(body))

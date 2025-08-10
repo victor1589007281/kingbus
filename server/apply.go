@@ -40,8 +40,8 @@ import (
 	"github.com/flike/kingbus/raft"
 	"github.com/flike/kingbus/raft/membership"
 	"github.com/flike/kingbus/storage"
-	gomysql "github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
 )
 
 const (
@@ -267,18 +267,18 @@ func (s *KingbusServer) applyBinlogEvent(eventRawData []byte, eventType replicat
 		//the the heartbeat event info
 		s.binlogProgress.lastBinlogFile.Store(utils.BytesToString(e.NextLogName))
 		log.Log.Debugf("apply a ROTATE_EVENT,raftIndex:%d,value:%s", raftIndex, string(value))
-	case replication.PREVIOUS_GTIDS_EVENT:
-		e := &replication.PreviousGtidsLogEvent{}
-		if err := e.Decode(eventRawData); err != nil {
-			return err
-		}
-		err = s.store.SetPreviousGtidSet(raftIndex, e.GSet)
-		if err != nil {
-			log.Log.Errorf("SetPreviousGtidSet error,err:%s,value:%s",
-				err, e.GSet.String())
-			return err
-		}
-		log.Log.Debugf("apply a PREVIOUS_GTIDS_EVENT,previousGtidSet:%s", e.GSet.String())
+	// case replication.PREVIOUS_GTIDS_EVENT:
+	// 	e := &replication.PreviousGtidsLogEvent{}
+	// 	if err := e.Decode(eventRawData); err != nil {
+	// 		return err
+	// 	}
+	// 	err = s.store.SetPreviousGtidSet(raftIndex, e.GSet)
+	// 	if err != nil {
+	// 		log.Log.Errorf("SetPreviousGtidSet error,err:%s,value:%s",
+	// 			err, e.GSet.String())
+	// 		return err
+	// 	}
+	// 	log.Log.Debugf("apply a PREVIOUS_GTIDS_EVENT,previousGtidSet:%s", e.GSet.String())
 	default:
 		log.Log.Errorf("do not need apply in kingbus")
 		return ErrUnsupport

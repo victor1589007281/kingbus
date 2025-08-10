@@ -28,11 +28,11 @@ import (
 
 	"fmt"
 
-	bolt "github.com/coreos/bbolt"
+	bolt "go.etcd.io/bbolt"
 	pb "github.com/coreos/etcd/raft/raftpb"
 	"github.com/flike/kingbus/log"
 	"github.com/flike/kingbus/utils"
-	gomysql "github.com/siddontang/go-mysql/mysql"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
 )
 
 const (

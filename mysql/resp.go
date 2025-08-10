@@ -21,7 +21,7 @@ package mysql
 import (
 	"fmt"
 
-	gomysql "github.com/siddontang/go-mysql/mysql"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
 )
 
 func (c *Conn) writeOK(r *gomysql.Result) error {

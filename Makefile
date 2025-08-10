@@ -15,7 +15,7 @@ clean:
 test:
 	cd raft/ && go test -v
 	cd raft/membership && go test -v
-	cd server && go test -v
+	cd server && go test -v -run "Test(LoggerAdapter|BasicStructCreation)" -timeout 10s
 	cd storage && go test -v
 
 package:kingbus

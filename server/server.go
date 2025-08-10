@@ -51,7 +51,21 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rcrowley/go-metrics"
 	"go.uber.org/atomic"
+	"go.uber.org/zap"
 )
+
+// LoggerAdapter adapts zap.SugaredLogger to raft.Logger interface
+type LoggerAdapter struct {
+	*zap.SugaredLogger
+}
+
+func (l *LoggerAdapter) Warning(v ...interface{}) {
+	l.Warn(v...)
+}
+
+func (l *LoggerAdapter) Warningf(format string, v ...interface{}) {
+	l.Warnf(format, v...)
+}
 
 const (
 	// Never overflow the rafthttp buffer, which is 4096.
@@ -458,7 +472,7 @@ func startEtcdRaftNode(cfg config.RaftNodeConfig, store storage.Storage, cl *mem
 		CheckQuorum:               true,
 		PreVote:                   cfg.PreVote,
 		DisableProposalForwarding: true,
-		Logger:                    log.Log,
+		Logger:                    &LoggerAdapter{log.Log},
 	}
 
 	n = etcdraft.StartNode(c, peers)
@@ -494,7 +508,7 @@ func restartEtcdNode(cfg config.RaftNodeConfig, store storage.Storage) (
 		CheckQuorum:               true,
 		PreVote:                   cfg.PreVote,
 		DisableProposalForwarding: true,
-		Logger:                    log.Log,
+		Logger:                    &LoggerAdapter{log.Log},
 	}
 
 	n := etcdraft.RestartNode(c)

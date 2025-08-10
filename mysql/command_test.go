@@ -3,8 +3,6 @@ package mysql
 import (
 	"testing"
 
-	"github.com/pingcap/tidb/types/parser_driver"
-
 	"bytes"
 	"os"
 	"strings"
@@ -12,8 +10,7 @@ import (
 	"github.com/flike/kingbus/log"
 	"github.com/pingcap/parser"
 	"github.com/pingcap/parser/ast"
-	_ "github.com/pingcap/tidb/types/parser_driver"
-	"github.com/siddontang/go-mysql/replication"
+	"github.com/go-mysql-org/go-mysql/replication"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -65,7 +62,7 @@ func TestSetQuery(t *testing.T) {
 	assert.IsType(t, &ast.SetStmt{}, stmt)
 
 	setStmt = stmt.(*ast.SetStmt)
-	assert.IsType(t, &driver.ValueExpr{}, setStmt.Variables[0].Value)
+	assert.IsType(t, &ast.ValueExpr{}, setStmt.Variables[0].Value)
 	valueExpr := setStmt.Variables[0].Value.(ast.ValueExpr)
 	assert.Equal(t, "CRC32", valueExpr.GetString())
 

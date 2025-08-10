@@ -647,7 +647,10 @@ var (
 	ErrIntOverflowRecord   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("record.proto", fileDescriptorRecord) }
+func init() { 
+	// Disabled to avoid conflicts with etcd's record.proto
+	// proto.RegisterFile("kingbus_record.proto", fileDescriptorRecord) 
+}
 
 var fileDescriptorRecord = []byte{
 	// 272 bytes of a gzipped FileDescriptorProto

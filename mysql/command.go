@@ -39,10 +39,9 @@ import (
 	"github.com/flike/kingbus/utils"
 	"github.com/pingcap/parser"
 	"github.com/pingcap/parser/ast"
-	_ "github.com/pingcap/tidb/types/parser_driver" //need by parser
 	metrics "github.com/rcrowley/go-metrics"
-	gomysql "github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
 )
 
 //MaxHeartbeatPeriod is ten years
@@ -339,7 +338,7 @@ func (c *Conn) handleSet(stmt *ast.SetStmt) error {
 			slaves := c.binlogServer.GetSlaves()
 			for _, s := range slaves {
 				if s.UUID == slaveUUID && s.Conn == c {
-					log.Log.Warningf("slave has been registered, slaveUUID:%s", slaveUUID)
+					log.Log.Warnf("slave has been registered, slaveUUID:%s", slaveUUID)
 				}
 			}
 		}

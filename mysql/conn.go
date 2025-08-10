@@ -20,13 +20,14 @@ package mysql
 
 import (
 	"context"
+	"crypto/rand"
 	"net"
 
 	"runtime"
 
 	"github.com/flike/kingbus/log"
 	"github.com/flike/kingbus/storage/storagepb"
-	gomysql "github.com/siddontang/go-mysql/mysql"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
 	"go.uber.org/atomic"
 )
 
@@ -77,7 +78,8 @@ func NewConn(conn net.Conn, s BinlogServer, user string, password string) (*Conn
 	c.user = user
 	c.BaseConn = NewBaseConn(conn)
 	c.connectionID = baseConnID.Add(1)
-	c.salt, _ = gomysql.RandomBuf(20)
+	c.salt = make([]byte, 20)
+	rand.Read(c.salt)
 	c.closed = atomic.NewBool(false)
 	masterInfo, err := s.GetMasterInfo()
 	if err != nil {

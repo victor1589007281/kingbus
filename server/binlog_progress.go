@@ -7,8 +7,8 @@ import (
 	"github.com/flike/kingbus/log"
 	"github.com/flike/kingbus/mysql"
 	"github.com/flike/kingbus/storage"
-	gomysql "github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
 	"go.uber.org/atomic"
 )
 

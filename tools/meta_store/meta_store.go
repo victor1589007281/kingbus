@@ -8,10 +8,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/coreos/bbolt"
+	"go.etcd.io/bbolt"
 	"github.com/flike/kingbus/storage"
-	gomysql "github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
+	gomysql "github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
 )
 
 const (

@@ -20,7 +20,6 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -80,7 +79,7 @@ func ExistLog(dirpath string) bool {
 //IsDirWriteable check dir if writeable
 func IsDirWriteable(dir string) error {
 	f := filepath.Join(dir, ".touch")
-	if err := ioutil.WriteFile(f, []byte(""), PrivateFileMode); err != nil {
+	if err := os.WriteFile(f, []byte(""), PrivateFileMode); err != nil {
 		return err
 	}
 	return os.Remove(f)

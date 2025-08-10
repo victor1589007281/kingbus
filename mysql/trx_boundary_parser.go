@@ -5,7 +5,7 @@ import (
 
 	"github.com/flike/kingbus/log"
 	"github.com/flike/kingbus/utils"
-	"github.com/siddontang/go-mysql/replication"
+	"github.com/go-mysql-org/go-mysql/replication"
 )
 
 //EventBoundaryType is the type of binlog event boundary
