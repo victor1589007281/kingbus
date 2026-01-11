@@ -34,6 +34,7 @@ import (
 ### 1.2 Kingbus Raft节点架构
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
 graph TB
     subgraph "Kingbus Raft 节点架构"
         subgraph "应用层"
@@ -201,6 +202,7 @@ func (r *Node) Run(rh *ReadyHandler) {
 #### Raft解决方案
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
 graph TB
     subgraph "网络分区场景"
         subgraph "分区A (多数派)"
@@ -320,6 +322,7 @@ func (r *Node) processMessages(ms []raftpb.Message) []raftpb.Message {
 #### Raft防护机制
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#333333', 'signalColor': '#333333', 'signalTextColor': '#1976d2', 'actorBkg': '#e3f2fd', 'actorBorder': '#1976d2', 'actorTextColor': '#000000', 'activationBkgColor': '#e8f5e9', 'noteBkgColor': '#fff3e0', 'noteTextColor': '#000000', 'noteBorderColor': '#f57c00', 'loopTextColor': '#000000', 'labelTextColor': '#1976d2', 'background': '#ffffff'}}}%%
 sequenceDiagram
     participant OldLeader as 旧Leader(分区A)
     participant Follower as Follower(分区B)
@@ -397,6 +400,7 @@ const (
 #### 节点重启恢复
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
 graph TD
     A[节点重启] --> B[加载持久化状态]
     B --> C[重建内存状态]
@@ -468,6 +472,7 @@ Kingbus集成了Prometheus监控，提供关键Raft指标：
 #### 节点数量选择
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
 graph LR
     subgraph "容错能力对比"
         A[3节点<br/>容忍1故障] 
@@ -574,4 +579,405 @@ Kingbus的Raft实现特别适合：
 - **高可用要求**：需要自动故障转移的关键业务
 - **跨地域部署**：支持多数据中心的一致性需求
 
-通过合理的配置调优和运维实践，Kingbus能够为MySQL Binlog复制提供稳定、高效的分布式一致性保证。 
+通过合理的配置调优和运维实践，Kingbus能够为MySQL Binlog复制提供稳定、高效的分布式一致性保证。
+
+## 6. Multi-Raft 分析与改造方案
+
+### 6.1 为什么Kingbus没有使用Multi-Raft
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
+graph TB
+    subgraph "Single Raft vs Multi-Raft 对比"
+        
+        subgraph "Single Raft (Kingbus当前)"
+            S1["单一Raft组"]
+            S2["所有binlog共享"]
+            S3["强一致性"]
+            S4["实现简单"]
+        end
+        
+        subgraph "Multi-Raft"
+            M1["多个Raft组"]
+            M2["数据分片"]
+            M3["水平扩展"]
+            M4["实现复杂"]
+        end
+    end
+
+    style S1 fill:#e8f5e9,stroke:#1b5e20
+    style M1 fill:#e3f2fd,stroke:#0d47a1
+```
+
+#### 6.1.1 Kingbus选择Single Raft的原因
+
+| 因素 | 分析 |
+|-----|------|
+| **业务特性** | Binlog是有序流，天然适合单Raft组 |
+| **一致性需求** | 所有Slave需要看到相同的binlog序列 |
+| **实现复杂度** | Single Raft实现简单，etcd/raft库成熟 |
+| **运维成本** | 单Raft组部署运维简单 |
+| **性能需求** | 大多数场景下单Raft组性能足够 |
+
+#### 6.1.2 是否已实现类似Multi-Raft效果？
+
+**答案：否，Kingbus没有实现Multi-Raft或类似效果。**
+
+```go
+// server/server.go - 只有一个Raft节点
+type KingbusServer struct {
+    raftNode *raft.Node  // 单一Raft节点
+    cluster  *membership.RaftCluster
+    store    storage.Storage
+    // ...
+}
+```
+
+**当前架构特点**：
+- 所有binlog事件通过同一个Raft组复制
+- 所有节点持有完整的binlog数据副本
+- 无数据分片，无多Raft组管理
+
+### 6.2 Multi-Raft改造设计方案
+
+#### 6.2.1 改造目标
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
+graph TB
+    subgraph "Multi-Raft 改造目标"
+        
+        G1["水平扩展<br/>支持更多Slave"]
+        G2["负载均衡<br/>分散复制压力"]
+        G3["容量扩展<br/>突破单机存储限制"]
+        G4["故障隔离<br/>单组故障不影响全局"]
+    end
+
+    style G1 fill:#e8f5e9,stroke:#1b5e20
+    style G2 fill:#e3f2fd,stroke:#0d47a1
+    style G3 fill:#fff3e0,stroke:#e65100
+    style G4 fill:#fce4ec,stroke:#880e4f
+```
+
+#### 6.2.2 分片策略设计
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
+graph TB
+    subgraph "Multi-Raft 分片方案"
+        
+        subgraph "方案一：按MySQL实例分片"
+            A1["Raft Group 1<br/>MySQL Master A"]
+            A2["Raft Group 2<br/>MySQL Master B"]
+            A3["Raft Group N<br/>MySQL Master N"]
+        end
+        
+        subgraph "方案二：按时间范围分片"
+            B1["Raft Group 1<br/>binlog 00001-00100"]
+            B2["Raft Group 2<br/>binlog 00101-00200"]
+            B3["Raft Group N<br/>binlog 00201-..."]
+        end
+        
+        subgraph "方案三：按GTID范围分片"
+            C1["Raft Group 1<br/>UUID-A:1-1000000"]
+            C2["Raft Group 2<br/>UUID-A:1000001-..."]
+        end
+    end
+
+    style A1 fill:#e8f5e9,stroke:#1b5e20
+    style B1 fill:#e3f2fd,stroke:#0d47a1
+    style C1 fill:#fff3e0,stroke:#e65100
+```
+
+**推荐方案：按MySQL实例分片**
+
+| 方案 | 优点 | 缺点 | 推荐度 |
+|-----|------|------|-------|
+| **按实例分片** | 天然隔离，实现简单 | 单实例仍有瓶颈 | ⭐⭐⭐⭐⭐ |
+| **按时间分片** | 老数据可归档 | 分片边界复杂 | ⭐⭐⭐ |
+| **按GTID分片** | 精细控制 | 实现复杂 | ⭐⭐ |
+
+#### 6.2.3 架构设计
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
+graph TB
+    subgraph "Multi-Raft 架构设计"
+        
+        subgraph "元数据层"
+            PLACEMENT["Placement Driver (PD)<br/>Raft组管理"]
+            META_RAFT["Meta Raft Group<br/>元数据一致性"]
+        end
+        
+        subgraph "数据层"
+            subgraph "Raft Group 1"
+                RG1_L["Leader"]
+                RG1_F1["Follower"]
+                RG1_F2["Follower"]
+            end
+            
+            subgraph "Raft Group 2"
+                RG2_L["Leader"]
+                RG2_F1["Follower"]
+                RG2_F2["Follower"]
+            end
+            
+            subgraph "Raft Group N"
+                RGN_L["Leader"]
+                RGN_F1["Follower"]
+                RGN_F2["Follower"]
+            end
+        end
+        
+        subgraph "客户端层"
+            ROUTER["Router<br/>路由分发"]
+            SYNCER1["Syncer 1"]
+            SYNCER2["Syncer 2"]
+            BS1["BinlogServer 1"]
+            BS2["BinlogServer 2"]
+        end
+    end
+    
+    PLACEMENT --> META_RAFT
+    PLACEMENT --> RG1_L
+    PLACEMENT --> RG2_L
+    PLACEMENT --> RGN_L
+    
+    ROUTER --> SYNCER1
+    ROUTER --> SYNCER2
+    SYNCER1 --> RG1_L
+    SYNCER2 --> RG2_L
+    
+    BS1 --> RG1_L
+    BS2 --> RG2_L
+
+    style PLACEMENT fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    style ROUTER fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+```
+
+#### 6.2.4 核心组件设计
+
+##### Placement Driver (PD)
+
+```go
+// 新增: placement/pd.go
+type PlacementDriver struct {
+    // 元数据Raft组
+    metaRaft *raft.Node
+    
+    // Raft组映射
+    groups    map[uint64]*RaftGroup  // groupID -> RaftGroup
+    
+    // MySQL实例到Raft组的映射
+    instanceMap map[string]uint64     // mysqlAddr -> groupID
+    
+    // 节点信息
+    nodes     map[uint64]*NodeInfo    // nodeID -> NodeInfo
+    
+    // 负载均衡
+    balancer  *LoadBalancer
+}
+
+type RaftGroup struct {
+    ID       uint64
+    Leader   uint64
+    Members  []uint64
+    MySQL    string        // 关联的MySQL实例
+    Status   GroupStatus
+}
+
+// 创建新Raft组
+func (pd *PlacementDriver) CreateRaftGroup(mysqlAddr string) (*RaftGroup, error)
+
+// 路由查询
+func (pd *PlacementDriver) GetRaftGroup(mysqlAddr string) (*RaftGroup, error)
+
+// Leader变更通知
+func (pd *PlacementDriver) OnLeaderChange(groupID, newLeader uint64)
+```
+
+##### 路由层
+
+```go
+// 新增: router/router.go
+type Router struct {
+    pd          *PlacementDriver
+    localGroups map[uint64]*raft.Node  // 本地Raft组
+}
+
+// 根据MySQL地址路由到正确的Raft组
+func (r *Router) Route(mysqlAddr string) (*raft.Node, error) {
+    group, err := r.pd.GetRaftGroup(mysqlAddr)
+    if err != nil {
+        return nil, err
+    }
+    return r.localGroups[group.ID], nil
+}
+```
+
+##### 存储层改造
+
+```go
+// 修改: storage/multi_storage.go
+type MultiStorage struct {
+    // 每个Raft组独立存储
+    stores map[uint64]*DiskStorage  // groupID -> Storage
+    
+    // 共享元数据存储
+    metaStore *MetaStore
+}
+
+func (s *MultiStorage) GetStorage(groupID uint64) *DiskStorage {
+    return s.stores[groupID]
+}
+
+func (s *MultiStorage) CreateStorage(groupID uint64, dir string) error {
+    s.stores[groupID] = NewDiskStorage(dir, reserveSize)
+    return nil
+}
+```
+
+### 6.3 改造可能遇到的问题
+
+#### 6.3.1 技术挑战
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
+graph TB
+    subgraph "Multi-Raft 技术挑战"
+        
+        subgraph "一致性问题"
+            C1["跨组事务<br/>DDL涉及多库"]
+            C2["顺序保证<br/>不同组间的顺序"]
+            C3["元数据同步<br/>PD单点风险"]
+        end
+        
+        subgraph "性能问题"
+            P1["心跳风暴<br/>多组心跳放大"]
+            P2["Leader均衡<br/>热点Leader"]
+            P3["资源争用<br/>同一节点多组"]
+        end
+        
+        subgraph "运维问题"
+            O1["复杂度提升<br/>组管理"]
+            O2["故障处理<br/>组级别故障"]
+            O3["监控告警<br/>指标爆炸"]
+        end
+    end
+
+    style C1 fill:#fce4ec,stroke:#880e4f
+    style P1 fill:#fff3e0,stroke:#e65100
+    style O1 fill:#e3f2fd,stroke:#0d47a1
+```
+
+#### 6.3.2 问题解决方案
+
+| 问题 | 解决方案 |
+|-----|---------|
+| **跨组事务** | 对于DDL，使用两阶段提交或串行化到元数据组 |
+| **顺序保证** | 同一MySQL实例的binlog归属同一组，天然有序 |
+| **元数据单点** | Meta Raft组自身高可用 |
+| **心跳风暴** | 批量心跳，合并同节点多组心跳 |
+| **Leader均衡** | PD定期检查，自动转移Leader |
+| **资源争用** | 限制单节点最大组数，资源隔离 |
+
+#### 6.3.3 兼容性问题
+
+```go
+// Slave连接时需要知道从哪个组读取
+// 修改: mysql/command.go
+
+func (c *Conn) handleBinlogDumpGTID(data []byte) error {
+    // 解析Slave请求的MySQL实例
+    mysqlAddr := c.getMySQLAddr()
+    
+    // 路由到正确的Raft组
+    raftGroup, err := c.router.Route(mysqlAddr)
+    if err != nil {
+        return err
+    }
+    
+    // 从对应组dump binlog
+    return c.dumpFromGroup(raftGroup, ...)
+}
+```
+
+### 6.4 改造步骤建议
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
+graph LR
+    subgraph "Multi-Raft 改造路线图"
+        
+        P1["Phase 1<br/>元数据分离<br/>(1-2周)"]
+        P2["Phase 2<br/>PD开发<br/>(2-3周)"]
+        P3["Phase 3<br/>多组支持<br/>(3-4周)"]
+        P4["Phase 4<br/>路由开发<br/>(2周)"]
+        P5["Phase 5<br/>测试优化<br/>(2-3周)"]
+    end
+    
+    P1 --> P2
+    P2 --> P3
+    P3 --> P4
+    P4 --> P5
+
+    style P1 fill:#e8f5e9,stroke:#1b5e20
+    style P3 fill:#e3f2fd,stroke:#0d47a1
+    style P5 fill:#fff3e0,stroke:#e65100
+```
+
+#### Phase 1: 元数据分离
+- 将全局元数据从DiskStorage中分离
+- 设计Meta Raft组的存储结构
+
+#### Phase 2: PD开发
+- 实现PlacementDriver核心逻辑
+- 实现组创建、删除、查询API
+- 实现Leader均衡调度
+
+#### Phase 3: 多组支持
+- 改造KingbusServer支持多Raft组
+- 实现MultiStorage
+- 改造Syncer支持组隔离
+
+#### Phase 4: 路由开发
+- 实现Router路由层
+- 改造BinlogServer支持路由
+- 改造MySQL连接处理
+
+#### Phase 5: 测试优化
+- 多组场景压力测试
+- 故障注入测试
+- 性能优化
+
+### 6.5 是否值得改造？
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
+graph TB
+    subgraph "改造决策矩阵"
+        
+        subgraph "适合改造场景"
+            Y1["✅ 需要支持多个MySQL实例"]
+            Y2["✅ 单Raft组性能瓶颈"]
+            Y3["✅ 需要更大的存储容量"]
+            Y4["✅ 有专业团队维护"]
+        end
+        
+        subgraph "不建议改造场景"
+            N1["❌ 单MySQL实例足够"]
+            N2["❌ 当前性能满足需求"]
+            N3["❌ 团队资源有限"]
+            N4["❌ 稳定性优先"]
+        end
+    end
+
+    style Y1 fill:#e8f5e9,stroke:#1b5e20
+    style N1 fill:#fce4ec,stroke:#880e4f
+```
+
+**建议**：
+- 大多数场景下，Single Raft足够使用
+- 如需支持多MySQL实例，考虑部署多套Kingbus
+- 只有在明确需要水平扩展时才考虑Multi-Raft改造
+- 改造成本高，需权衡收益

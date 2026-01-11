@@ -113,6 +113,7 @@ func (s *Syncer) proposeBinlogEvent(event *replication.BinlogEvent) error {
 Kingbus实现了完整的管道化处理架构：
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
 graph LR
     A[MySQL Master] -->|Binlog Stream| B[Syncer接收]
     B -->|Parse Event| C[事件解析器]
@@ -481,6 +482,7 @@ syncerCfg := replication.BinlogSyncerConfig{
 ### 并发处理性能对比
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
 graph TB
     subgraph "传统同步处理"
         A1[接收Binlog] --> A2[解析事件]
@@ -508,6 +510,7 @@ graph TB
 ### 存储层性能架构
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#1976d2', 'background': '#ffffff', 'clusterBkg': '#f5f5f5', 'clusterBorder': '#999999', 'edgeLabelBackground': '#ffffff'}}}%%
 graph TD
     subgraph "存储优化架构"
         C1[Raft Entries] --> C2{大小检查}
@@ -535,6 +538,7 @@ graph TD
 ### 网络优化流程
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Arial', 'primaryColor': '#e3f2fd', 'primaryTextColor': '#000000', 'primaryBorderColor': '#1976d2', 'lineColor': '#333333', 'signalColor': '#333333', 'signalTextColor': '#1976d2', 'actorBkg': '#e3f2fd', 'actorBorder': '#1976d2', 'actorTextColor': '#000000', 'activationBkgColor': '#e8f5e9', 'noteBkgColor': '#fff3e0', 'noteTextColor': '#000000', 'noteBorderColor': '#f57c00', 'loopTextColor': '#000000', 'labelTextColor': '#1976d2', 'background': '#ffffff'}}}%%
 sequenceDiagram
     participant Client as MySQL Client
     participant Conn as Connection Pool
